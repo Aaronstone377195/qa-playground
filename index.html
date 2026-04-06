@@ -1,0 +1,1735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>QA Testing Playground — Selenium & Playwright</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg: #0a0e17;
+      --bg2: #111827;
+      --bg3: #1a2234;
+      --border: #1f2f4a;
+      --accent: #00d9ff;
+      --accent2: #7c3aed;
+      --green: #22d3a3;
+      --red: #f43f5e;
+      --yellow: #fbbf24;
+      --text: #e2e8f0;
+      --muted: #64748b;
+      --card: #131c2e;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'JetBrains Mono', monospace;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      min-height: 100vh;
+    }
+    /* ── SIDEBAR ── */
+    #sidebar {
+      width: 260px;
+      background: var(--bg2);
+      border-right: 1px solid var(--border);
+      position: fixed;
+      top: 0; left: 0;
+      height: 100vh;
+      overflow-y: auto;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+    }
+    .sidebar-header {
+      padding: 24px 20px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .sidebar-logo {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--accent);
+      letter-spacing: -0.02em;
+    }
+    .sidebar-logo span { color: var(--green); }
+    .sidebar-sub { font-size: 0.65rem; color: var(--muted); margin-top: 4px; }
+    .nav-section-title {
+      font-size: 0.6rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      padding: 16px 20px 6px;
+    }
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 20px;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.75rem;
+      transition: all 0.15s;
+      border-left: 2px solid transparent;
+    }
+    .nav-link:hover, .nav-link.active {
+      color: var(--accent);
+      background: rgba(0,217,255,0.06);
+      border-left-color: var(--accent);
+    }
+    .nav-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--border);
+      flex-shrink: 0;
+    }
+    .nav-link:hover .nav-dot, .nav-link.active .nav-dot { background: var(--accent); }
+    /* ── MAIN ── */
+    #main { margin-left: 260px; flex: 1; padding: 0; }
+    .topbar {
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky; top: 0; z-index: 50;
+    }
+    .topbar-title { font-family: 'Syne', sans-serif; font-size: 0.85rem; color: var(--muted); }
+    .status-badge {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 0.65rem; color: var(--green);
+      background: rgba(34,211,163,0.1);
+      padding: 4px 10px; border-radius: 20px;
+      border: 1px solid rgba(34,211,163,0.25);
+    }
+    .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+    .content { padding: 32px; }
+    /* ── SECTION ── */
+    .section {
+      margin-bottom: 48px;
+      scroll-margin-top: 80px;
+    }
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .section-icon {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem;
+    }
+    .section-title { font-family: 'Syne', sans-serif; font-size: 1.05rem; font-weight: 700; }
+    .section-id {
+      font-size: 0.62rem;
+      color: var(--accent);
+      background: rgba(0,217,255,0.08);
+      border: 1px solid rgba(0,217,255,0.2);
+      padding: 2px 8px; border-radius: 4px;
+    }
+    /* ── CARD ── */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    .card-row { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
+    .field { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 160px; }
+    .field label { font-size: 0.68rem; color: var(--muted); }
+    .selector-tag {
+      font-size: 0.6rem;
+      color: var(--yellow);
+      font-family: 'JetBrains Mono', monospace;
+      background: rgba(251,191,36,0.08);
+      border: 1px solid rgba(251,191,36,0.2);
+      padding: 2px 6px; border-radius: 3px;
+      display: inline-block; margin-top: 2px;
+    }
+    /* ── INPUTS ── */
+    input[type="text"], input[type="email"], input[type="password"],
+    input[type="number"], input[type="search"], input[type="tel"],
+    input[type="url"], input[type="date"], input[type="time"],
+    input[type="datetime-local"], textarea, select {
+      width: 100%;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      padding: 9px 12px;
+      border-radius: 6px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    input:focus, textarea:focus, select:focus { border-color: var(--accent); }
+    input:disabled, select:disabled, textarea:disabled {
+      opacity: 0.4; cursor: not-allowed;
+    }
+    input[type="range"] { width: 100%; accent-color: var(--accent); }
+    input[type="color"] { width: 48px; height: 36px; border-radius: 6px; cursor: pointer; padding: 2px; }
+    input[type="file"] { color: var(--muted); font-size: 0.75rem; }
+    input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); width: 16px; height: 16px; }
+    textarea { resize: vertical; min-height: 80px; }
+    select option { background: var(--bg2); }
+    /* ── BUTTONS ── */
+    .btn {
+      padding: 9px 18px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      font-weight: 600;
+      transition: all 0.15s;
+    }
+    .btn-primary { background: var(--accent); color: #000; }
+    .btn-primary:hover { background: #00b8d9; transform: translateY(-1px); }
+    .btn-secondary { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
+    .btn-secondary:hover { background: rgba(0,217,255,0.1); }
+    .btn-success { background: var(--green); color: #000; }
+    .btn-success:hover { opacity: 0.85; }
+    .btn-danger { background: var(--red); color: #fff; }
+    .btn-danger:hover { opacity: 0.85; }
+    .btn-warning { background: var(--yellow); color: #000; }
+    .btn-purple { background: var(--accent2); color: #fff; }
+    .btn-disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-lg { padding: 12px 28px; font-size: 0.9rem; }
+    .btn-sm { padding: 5px 12px; font-size: 0.7rem; }
+    .btn-icon { display: inline-flex; align-items: center; gap: 6px; }
+    .btn-group { display: flex; flex-wrap: wrap; gap: 10px; }
+    /* ── TABLE ── */
+    .tbl-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+    th {
+      background: var(--bg3);
+      color: var(--accent);
+      padding: 10px 14px;
+      text-align: left;
+      font-weight: 600;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    td { padding: 10px 14px; border-bottom: 1px solid var(--border); }
+    tr:hover td { background: rgba(255,255,255,0.02); }
+    tr.selected td { background: rgba(0,217,255,0.06); }
+    /* ── ALERT ── */
+    .alert {
+      padding: 12px 16px;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      margin-bottom: 10px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .alert-info { background: rgba(0,217,255,0.1); border: 1px solid rgba(0,217,255,0.3); color: var(--accent); }
+    .alert-success { background: rgba(34,211,163,0.1); border: 1px solid rgba(34,211,163,0.3); color: var(--green); }
+    .alert-warning { background: rgba(251,191,36,0.1); border: 1px solid rgba(251,191,36,0.3); color: var(--yellow); }
+    .alert-danger { background: rgba(244,63,94,0.1); border: 1px solid rgba(244,63,94,0.3); color: var(--red); }
+    /* ── MODAL ── */
+    .modal-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.75);
+      backdrop-filter: blur(4px);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-box {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 28px;
+      width: 480px;
+      max-width: 95vw;
+      position: relative;
+      animation: modalIn 0.2s ease;
+    }
+    @keyframes modalIn { from{opacity:0;transform:translateY(-20px)} to{opacity:1;transform:translateY(0)} }
+    .modal-title { font-family: 'Syne', sans-serif; font-size: 1.1rem; margin-bottom: 12px; }
+    .modal-body { color: var(--muted); font-size: 0.78rem; line-height: 1.6; margin-bottom: 20px; }
+    .modal-footer { display: flex; gap: 10px; justify-content: flex-end; }
+    .modal-close-btn {
+      position: absolute; top: 16px; right: 16px;
+      background: none; border: none; color: var(--muted);
+      cursor: pointer; font-size: 1.2rem;
+    }
+    /* ── ACCORDION ── */
+    .accordion-item { border: 1px solid var(--border); border-radius: 8px; margin-bottom: 8px; overflow: hidden; }
+    .accordion-header {
+      padding: 12px 16px;
+      background: var(--bg3);
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8rem;
+      user-select: none;
+      transition: background 0.15s;
+    }
+    .accordion-header:hover { background: rgba(0,217,255,0.08); }
+    .accordion-arrow { transition: transform 0.2s; }
+    .accordion-item.open .accordion-arrow { transform: rotate(180deg); }
+    .accordion-body { display: none; padding: 14px 16px; font-size: 0.78rem; color: var(--muted); line-height: 1.6; }
+    .accordion-item.open .accordion-body { display: block; }
+    /* ── TABS ── */
+    .tabs-nav { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
+    .tab-btn {
+      padding: 10px 20px;
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--muted);
+      cursor: pointer;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      margin-bottom: -1px;
+      transition: all 0.15s;
+    }
+    .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .tab-panel { display: none; font-size: 0.78rem; color: var(--muted); line-height: 1.6; }
+    .tab-panel.active { display: block; }
+    /* ── TOOLTIP ── */
+    .tooltip-wrap { position: relative; display: inline-block; }
+    .tooltip-text {
+      display: none;
+      position: absolute;
+      bottom: 120%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--bg3);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 6px 10px;
+      border-radius: 5px;
+      font-size: 0.7rem;
+      white-space: nowrap;
+      z-index: 999;
+    }
+    .tooltip-wrap:hover .tooltip-text { display: block; }
+    /* ── PROGRESS ── */
+    .progress-bar-wrap {
+      background: var(--bg3);
+      border-radius: 20px;
+      height: 10px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      border-radius: 20px;
+      transition: width 0.5s ease;
+    }
+    /* ── TOGGLE ── */
+    .toggle {
+      position: relative;
+      width: 44px; height: 24px;
+      display: inline-block;
+    }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle-track {
+      position: absolute; inset: 0;
+      background: var(--border);
+      border-radius: 24px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .toggle input:checked + .toggle-track { background: var(--accent); }
+    .toggle-thumb {
+      position: absolute;
+      top: 3px; left: 3px;
+      width: 18px; height: 18px;
+      background: #fff;
+      border-radius: 50%;
+      transition: transform 0.2s;
+    }
+    .toggle input:checked ~ .toggle-track .toggle-thumb { transform: translateX(20px); }
+    /* ── DRAG & DROP ── */
+    .drag-zone {
+      border: 2px dashed var(--border);
+      border-radius: 8px;
+      padding: 32px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.78rem;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+    .drag-zone.drag-over { border-color: var(--accent); background: rgba(0,217,255,0.05); color: var(--accent); }
+    .drag-item {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      padding: 10px 14px;
+      border-radius: 6px;
+      margin-bottom: 8px;
+      cursor: grab;
+      font-size: 0.78rem;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .drag-item:active { cursor: grabbing; }
+    .drag-handle { color: var(--muted); }
+    /* ── OUTPUT BOX ── */
+    .output-box {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px;
+      font-size: 0.75rem;
+      color: var(--green);
+      min-height: 40px;
+      font-family: 'JetBrains Mono', monospace;
+      margin-top: 10px;
+    }
+    /* ── SPINNER ── */
+    .spinner {
+      width: 28px; height: 28px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    /* ── CHIP ── */
+    .chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.68rem;
+      border: 1px solid;
+      margin: 3px;
+    }
+    .chip-close { cursor: pointer; opacity: 0.6; }
+    .chip-close:hover { opacity: 1; }
+    /* ── TOAST ── */
+    #toast-container {
+      position: fixed;
+      bottom: 24px; right: 24px;
+      z-index: 9000;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .toast {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 0.75rem;
+      min-width: 240px;
+      animation: slideIn 0.3s ease;
+      border-left: 3px solid var(--green);
+    }
+    .toast.toast-error { border-left-color: var(--red); }
+    .toast.toast-warn { border-left-color: var(--yellow); }
+    @keyframes slideIn { from{transform:translateX(100%);opacity:0} to{transform:translateX(0);opacity:1} }
+    /* ── MISC ── */
+    .inline-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .label-check { display: flex; align-items: center; gap: 8px; font-size: 0.78rem; cursor: pointer; }
+    .hidden-el { display: none; }
+    .visible-on-hover { opacity: 0; transition: opacity 0.2s; }
+    .hover-trigger:hover .visible-on-hover { opacity: 1; }
+    #dynamic-content { display: none; }
+    .shadow-box { box-shadow: 0 0 0 2px var(--accent); border-radius: 6px; padding: 12px; }
+    .nested-frame {
+      width: 100%; height: 200px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--bg3);
+    }
+    hr.divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+    .kbd {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 2px 8px;
+      font-size: 0.72rem;
+      color: var(--accent);
+    }
+    /* GRID */
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 700px) { .two-col { grid-template-columns: 1fr; } #sidebar { width: 200px; } #main { margin-left: 200px; } }
+    /* ── INFINITE SCROLL ── */
+    #inf-list { max-height: 220px; overflow-y: auto; border: 1px solid var(--border); border-radius: 6px; }
+    .inf-item { padding: 8px 14px; border-bottom: 1px solid var(--border); font-size: 0.75rem; color: var(--muted); }
+    /* ── IFRAME ── */
+    .sandbox-frame {
+      width: 100%;
+      height: 180px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--bg3);
+    }
+    /* stars bg */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: radial-gradient(ellipse at 20% 50%, rgba(0,217,255,0.04) 0%, transparent 60%),
+                        radial-gradient(ellipse at 80% 20%, rgba(124,58,237,0.05) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .content { position: relative; z-index: 1; }
+    /* scroll */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+    /* Highlight selected row */
+    .row-selectable { cursor: pointer; }
+  </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav id="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">QA<span>Forge</span></div>
+    <div class="sidebar-sub">Selenium &amp; Playwright Playground</div>
+  </div>
+  <div class="nav-section-title">Components</div>
+  <a href="#text-inputs" class="nav-link active"><span class="nav-dot"></span>Text Inputs</a>
+  <a href="#dropdowns" class="nav-link"><span class="nav-dot"></span>Dropdowns &amp; Select</a>
+  <a href="#checkboxes" class="nav-link"><span class="nav-dot"></span>Checkboxes &amp; Radio</a>
+  <a href="#buttons" class="nav-link"><span class="nav-dot"></span>Buttons</a>
+  <a href="#forms" class="nav-link"><span class="nav-dot"></span>Forms &amp; Validation</a>
+  <a href="#tables" class="nav-link"><span class="nav-dot"></span>Tables</a>
+  <a href="#modals" class="nav-link"><span class="nav-dot"></span>Modals &amp; Overlays</a>
+  <a href="#alerts" class="nav-link"><span class="nav-dot"></span>Alerts &amp; Toasts</a>
+  <a href="#accordion" class="nav-link"><span class="nav-dot"></span>Accordion</a>
+  <a href="#tabs" class="nav-link"><span class="nav-dot"></span>Tabs</a>
+  <a href="#sliders" class="nav-link"><span class="nav-dot"></span>Sliders &amp; Range</a>
+  <a href="#toggles" class="nav-link"><span class="nav-dot"></span>Toggles &amp; Switches</a>
+  <a href="#file-upload" class="nav-link"><span class="nav-dot"></span>File Upload</a>
+  <a href="#dynamic" class="nav-link"><span class="nav-dot"></span>Dynamic Content</a>
+  <a href="#drag-drop" class="nav-link"><span class="nav-dot"></span>Drag &amp; Drop</a>
+  <a href="#tooltips" class="nav-link"><span class="nav-dot"></span>Tooltips</a>
+  <a href="#progress" class="nav-link"><span class="nav-dot"></span>Progress Bars</a>
+  <a href="#frames" class="nav-link"><span class="nav-dot"></span>iFrame</a>
+  <a href="#keyboard" class="nav-link"><span class="nav-dot"></span>Keyboard Events</a>
+  <a href="#waits" class="nav-link"><span class="nav-dot"></span>Waits &amp; Loading</a>
+  <a href="#shadow" class="nav-link"><span class="nav-dot"></span>Shadow DOM Hint</a>
+  <a href="#infinite" class="nav-link"><span class="nav-dot"></span>Infinite Scroll</a>
+  <a href="#window" class="nav-link"><span class="nav-dot"></span>New Window / Tab</a>
+  <div style="flex:1"></div>
+  <div style="padding:16px 20px; font-size:0.6rem; color:var(--muted); border-top:1px solid var(--border)">
+    All elements have unique IDs<br>for easy test targeting 🎯
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div id="main">
+  <div class="topbar">
+    <div class="topbar-title">QA Testing Playground — All UI Components</div>
+    <div class="status-badge"><span class="status-dot"></span>Live &amp; Ready to Test</div>
+  </div>
+  <div class="content">
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- TEXT INPUTS -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="section" id="text-inputs">
+      <div class="section-header">
+        <div class="section-icon" style="background:rgba(0,217,255,0.1)">📝</div>
+        <div class="section-title">Text Inputs</div>
+        <div class="section-id">#text-inputs</div>
+      </div>
+      <div class="card">
+        <div class="card-row">
+          <div class="field">
+            <label>Text Input <span class="selector-tag">#txt-basic</span></label>
+            <input type="text" id="txt-basic" placeholder="Enter any text..."/>
+          </div>
+          <div class="field">
+            <label>Email Input <span class="selector-tag">#txt-email</span></label>
+            <input type="email" id="txt-email" placeholder="user@example.com"/>
+          </div>
+          <div class="field">
+            <label>Password <span class="selector-tag">#txt-password</span></label>
+            <input type="password" id="txt-password" placeholder="••••••••"/>
+          </div>
+        </div>
+        <div class="card-row" style="margin-top:12px">
+          <div class="field">
+            <label>Number Input <span class="selector-tag">#txt-number</span></label>
+            <input type="number" id="txt-number" min="0" max="100" placeholder="0–100"/>
+          </div>
+          <div class="field">
+            <label>Search Input <span class="selector-tag">#txt-search</span></label>
+            <input type="search" id="txt-search" placeholder="Search..."/>
+          </div>
+          <div class="field">
+            <label>Tel Input <span class="selector-tag">#txt-tel</span></label>
+            <input type="tel" id="txt-tel" placeholder="+91 98765 43210"/>
+          </div>
+        </div>
+        <div class="card-row" style="margin-top:12px">
+          <div class="field">
+            <label>URL Input <span class="selector-tag">#txt-url</span></label>
+            <input type="url" id="txt-url" placeholder="https://example.com"/>
+          </div>
+          <div class="field">
+            <label>Date Input <span class="selector-tag">#txt-date</span></label>
+            <input type="date" id="txt-date"/>
+          </div>
+          <div class="field">
+            <label>Time Input <span class="selector-tag">#txt-time</span></label>
+            <input type="time" id="txt-time"/>
+          </div>
+        </div>
+        <div class="card-row" style="margin-top:12px">
+          <div class="field">
+            <label>DateTime Local <span class="selector-tag">#txt-datetime</span></label>
+            <input type="datetime-local" id="txt-datetime"/>
+          </div>
+          <div class="field">
+            <label>Color Picker <span class="selector-tag">#txt-color</span></label>
+            <input type="color" id="txt-color" value="#00d9ff"/>
+          </div>
+          <div class="field">
+            <label>Read-Only Input <span class="selector-tag">#txt-readonly</span></label>
+            <input type="text" id="txt-readonly" value="This is read-only" readonly/>
+          </div>
+        </div>
+        <div class="card-row" style="margin-top:12px">
+          <div class="field">
+            <label>Disabled Input <span class="selector-tag">#txt-disabled</span></label>
+            <input type="text" id="txt-disabled" value="Disabled field" disabled/>
+          </div>
+          <div class="field" style="flex:2">
+            <label>Textarea <span class="selector-tag">#txt-area</span></label>
+            <textarea id="txt-area" placeholder="Multi-line input goes here..." rows="3"></textarea>
+          </div>
+        </div>
+        <div class="card-row" style="margin-top:12px">
+          <div class="field">
+            <label>Autocomplete Input <span class="selector-tag">#txt-auto</span></label>
+            <input type="text" id="txt-auto" list="auto-list" placeholder="Type a fruit..."/>
+            <datalist id="auto-list">
+              <option value="Apple"/><option value="Banana"/><option value="Cherry"/>
+              <option value="Date"/><option value="Elderberry"/><option value="Fig"/>
+            </datalist>
+          </div>
+          <div class="field">
+            <label>Max-Length Input (10) <span class="selector-tag">#txt-maxlen</span></label>
+            <input type="text" id="txt-maxlen" maxlength="10" placeholder="Max 10 chars"/>
+          </div>
+          <div class="field">
+            <label>Pattern Input (only letters) <span class="selector-tag">#txt-pattern</span></label>
+            <input type="text" id="txt-pattern" pattern="[A-Za-z]+" placeholder="Letters only"/>
+          </div>
+        </div>
+      </div>
+      <div class="output-box" id="input-output">// Type in any field above — output appears here</div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- DROPDOWNS -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="section" id="dropdowns">
+      <div class="section-header">
+        <div class="section-icon" style="background:rgba(124,58,237,0.15)">▾</div>
+        <div class="section-title">Dropdowns &amp; Select</div>
+        <div class="section-id">#dropdowns</div>
+      </div>
+      <div class="card two-col">
+        <div class="field">
+          <label>Single Select <span class="selector-tag">#sel-single</span></label>
+          <select id="sel-single">
+            <option value="">-- Choose an option --</option>
+            <option value="selenium">Selenium</option>
+            <option value="playwright">Playwright</option>
+            <option value="cypress">Cypress</option>
+            <option value="puppeteer">Puppeteer</option>
+            <option value="webdriverio">WebdriverIO</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Multi Select <span class="selector-tag">#sel-multi</span></label>
+          <select id="sel-multi" multiple size="5">
+            <option value="chrome">Chrome</option>
+            <option value="firefox">Firefox</option>
+            <option value="safari">Safari</option>
+            <option value="edge">Edge</option>
+            <option value="opera">Opera</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Grouped Select <span class="selector-tag">#sel-group</span></label>
+          <select id="sel-group">
+            <optgroup label="Languages">
+              <option value="python">Python</option>
+              <option value="java">Java</option>
+              <option value="js">JavaScript</option>
+            </optgroup>
+            <optgroup label="Frameworks">
+              <option value="pytest">PyTest</option>
+              <option value="junit">JUnit</option>
+              <option value="mocha">Mocha</option>
+            </optgroup>
+          </select>
+        </div>
+        <div class="field">
+          <label>Disabled Select <span class="selector-tag">#sel-disabled</span></label>
+          <select id="sel-disabled" disabled>
+            <option>Disabled Option</option>
+          </select>
+        </div>
+      </div>
+      <div class="card" style="margin-top:0">
+        <label style="font-size:0.7rem;color:var(--muted);display:block;margin-bottom:8px">Custom Dropdown (JS) <span class="selector-tag">#custom-dropdown</span></label>
+        <div id="custom-dropdown" style="position:relative;max-width:280px">
+          <button id="custom-dd-btn" class="btn btn-secondary" onclick="toggleCustomDD()" aria-haspopup="listbox" aria-expanded="false" style="width:100%;text-align:left;display:flex;justify-content:space-between">
+            <span id="custom-dd-value">Select Environment</span><span>▾</span>
+          </button>
+          <div id="custom-dd-list" role="listbox" style="display:none;position:absolute;top:100%;left:0;width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:6px;z-index:200;margin-top:4px">
+            <div class="inf-item custom-dd-item" role="option" data-val="dev" onclick="selectCustomDD(this)" style="cursor:pointer;padding:10px 14px">Development</div>
+            <div class="inf-item custom-dd-item" role="option" data-val="staging" onclick="selectCustomDD(this)" style="cursor:pointer;padding:10px 14px">Staging</div>
+            <div class="inf-item custom-dd-item" role="option" data-val="prod" onclick="selectCustomDD(this)" style="cursor:pointer;padding:10px 14px">Production</div>
+          </div>
+        </div>
+      </div>
+      <div class="output-box" id="dd-output">// Select any option — value logged here</div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- CHECKBOXES & RADIO -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="section" id="checkboxes">
+      <div class="section-header">
+        <div class="section-icon" style="background:rgba(34,211,163,0.1)">✓</div>
+        <div class="section-title">Checkboxes &amp; Radio Buttons</div>
+        <div class="section-id">#checkboxes</div>
+      </div>
+      <div class="two-col">
+        <div class="card">
+          <div style="font-size:0.7rem;color:var(--muted);margin-bottom:12px">Checkboxes</div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <label class="label-check"><input type="checkbox" id="chk-1" value="selenium" checked/> <span>Selenium <span class="selector-tag">#chk-1</span></span></label>
+            <label class="label-check"><input type="checkbox" id="chk-2" value="playwright"/> <span>Playwright <span class="selector-tag">#chk-2</span></span></label>
+            <label class="label-check"><input type="checkbox" id="chk-3" value="cypress"/> <span>Cypress <span class="selector-tag">#chk-3</span></span></label>
+            <label class="label-check"><input type="checkbox" id="chk-disabled" value="disabled" disabled/> <span>Disabled <span class="selector-tag">#chk-disabled</span></span></label>
+            <label class="label-check"><input type="checkbox" id="chk-indeterminate"/> <span>Indeterminate <span class="selector-tag">#chk-indeterminate</span></span></label>
+          </div>
+          <button class="btn btn-sm btn-secondary" onclick="checkAll()" style="margin-top:14px" id="btn-check-all">Check All</button>
+          <button class="btn btn-sm btn-secondary" onclick="uncheckAll()" style="margin-top:8px;margin-left:8px" id="btn-uncheck-all">Uncheck All</button>
+        </div>
+        <div class="card">
+          <div style="font-size:0.7rem;color:var(--muted);margin-bottom:12px">Radio Buttons</div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <label class="label-check"><input type="radio" name="browser" id="radio-chrome" value="chrome" checked/> <span>Chrome <span class="selector-tag">#radio-chrome</span></span></label>
+            <label class="label-check"><input type="radio" name="browser" id="radio-firefox" value="firefox"/> <span>Firefox <span class="selector-tag">#radio-firefox</span></span></label>
+            <label class="label-check"><input type="radio" name="browser" id="radio-safari" value="safari"/> <span>Safari <span class="selector-tag">#radio-safari</span></span></label>
+            <label class="label-check"><input type="radio" name="browser" id="radio-edge" value="edge"/> <span>Edge <span class="selector-tag">#radio-edge</span></span></label>
+          </div>
+          <div class="output-box" id="radio-output" style="margin-top:12px">Selected: chrome</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- BUTTONS -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="section" id="buttons">
+      <div class="section-header">
+        <div class="section-icon" style="background:rgba(251,191,36,0.1)">⬡</div>
+        <div class="section-title">Buttons</div>
+        <div class="section-id">#buttons</div>
+      </div>
+      <div class="card">
+        <div style="font-size:0.7rem;color:var(--muted);margin-bottom:12px">Button Variants</div>
+        <div class="btn-group">
+          <button class="btn btn-primary" id="btn-primary" onclick="logBtn('btn-primary')">Primary</button>
+          <button class="btn btn-secondary" id="btn-secondary" onclick="logBtn('btn-secondary')">Secondary</button>
+          <button class="btn btn-success" id="btn-success" onclick="logBtn('btn-success')">Success</button>
+          <button class="btn btn-danger" id="btn-danger" onclick="logBtn('btn-danger')">Danger</button>
+          <button class="btn btn-warning" id="btn-warning" onclick="logBtn('btn-warning')">Warning</button>
+          <button class="btn btn-purple" id="btn-purple" onclick="logBtn('btn-purple')">Purple</button>
+          <button class="btn btn-primary btn-disabled" id="btn-disabled" disabled>Disabled</button>
+        </div>
+      </div>
+      <div class="card">
+        <div style="font-size:0.7rem;color:var(--muted);margin-bottom:12px">Button Sizes</div>
+        <div class="btn-group" style="align-items:center">
+          <button class="btn btn-primary btn-lg" id="btn-lg" onclick="logBtn('btn-lg')">Large Button</button>
+          <button class="btn btn-primary" id="btn-md" onclick="logBtn('btn-md')">Normal Button</button>
+          <button class="btn btn-primary btn-sm" id="btn-sm" onclick="logBtn('btn-sm')">Small</button>
+        </div>
+      </div>
+      <div class="card">
+        <div style="font-size:0.7rem;color:var(--muted);margin-bottom:12px">Special Buttons</div>
+        <div class="btn-group">
+          <button class="btn btn-primary btn-icon" id="btn-double-click" ondblclick="logBtn('double-clicked!')">Double Click Me</button>
+          <button class="btn btn-secondary btn-icon" id="btn-right-click" oncontextmenu="handleRightClick(event)">Right Click Me</button>
+          <button class="btn btn-success" id="btn-async" onclick="asyncClick()">Click → Wait → Result</button>
+          <button class="btn btn-warning" id="btn-confirm" onclick="confirmClick()">Confirm Dialog</button>
+          <button class="btn btn-purple" id="btn-prompt" onclick="promptClick()">Prompt Dialog</button>
+          <button class="btn btn-danger" id="btn-alert" onclick="alertClick()">Alert Dialog</button>
+        </div>
+      </div>
+      <div class="output-box" id="btn-output">// Click any button — action logged here</div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- FORM VALIDATION -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="section" id="forms">
+      <div class="section-header">
+        <div class="section-icon" style="background:rgba(244,63,94,0.1)">🗂</div>
+        <div class="section-title">Form &amp; Validation</div>
+        <div class="section-id">#forms</div>
+      </div>
+      <div class="card">
+        <div id="form-output-top" style="margin-bottom:16px"></div>
+        <div class="card-row">
+          <div class="field">
+            <label>Full Name * <span class="selector-tag">#form-name</span></label>
+            <input type="text" id="form-name" required placeholder="John Doe"/>
+          </div>
+          <div class="field">
+            <label>Email * <span class="selector-tag">#form-email</span></label>
+            <input type="email" id="form-email" required placeholder="john@example.com"/>
+          </div>
+        </div>
+        <div class="card-row" style="margin-top:12px">
+          <div class="field">
+            <label>Password * <span class="selector-tag">#form-pass</span></label>
+            <input type="password" id="form-pass" required minlength="6" placeholder="Min 6 characters"/>
+          </div>
+          <div class="field">
+            <label>Confirm Password * <span class="selector-tag">#form-pass2</span></label>
+            <input type="password" id="form-pass2" required placeholder="Repeat password"/>
+          </div>
+        </div>
+        <div class="card-row" style="margin-top:12px">
+          <div class="field">
+            <label>Role <span class="selector-tag">#form-role</span></label>
+            <select id="form-role">
+              <option value="">Select role</option>
+              <option value="qa">QA Engineer</option>
+              <option value="dev">Developer</option>
+              <option value="pm">Product Manager</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Message <span class="selector-tag">#form-msg</span></label>
+            <textarea id="form-msg" placeholder="Any message..."></textarea>
+          </div>
+        </div>
+        <div style="margin-top:12px">
+          <label class="label-check"><input type="checkbox" id="form-agree"/> <span>I agree to the terms <span class="selector-tag">#form-agree</span></span></label>
+        </div>
+        <div class="btn-group" style="margin-top:16px">
+          <button class="btn btn-primary" id="btn-form-submit" onclick="submitForm()">Submit Form</button>
+          <button class="btn btn-secondary" id="btn-form-reset" onclick="resetForm()">Reset Form</button>
+        </div>
+        <div class="output-box" id="form-output" style="margin-top:12px">// Form output appears here</div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- TABLES -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="section" id="tables">
+      <div class="section-header">
+        <div class="section-icon" style="background:rgba(0,217,255,0.1)">⊞</div>
+        <div class="section-title">Tables</div>
+        <div class="section-id">#tables</div>
+      </div>
+      <div class="card">
+        <div style="display:flex;gap:10px;margin-bottom:12px;align-items:center">
+          <input type="text" id="tbl-search" placeholder="Filter table..." style="max-width:200px" oninput="filterTable()"/>
+          <button class="btn btn-sm btn-secondary" id="btn-sort-name" onclick="sortTable(0)">Sort by Name</button>
+          <button class="btn btn-sm btn-secondary" id="btn-sort-status" onclick="sortTable(3)">Sort by Status</button>
+        </div>
+        <div class="tbl-wrap">
+          <table id="main-table">
+            <thead>
+              <tr>
+                <th>Name</th><th>Framework</th><th>Language</th><th>Status</th><th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="tbl-body">
+              <tr class="row-selectable" onclick="selectRow(this)" data-id="1"><td>Alice</td><td>Selenium</td><td>Python</td><td><span style="color:var(--green)">✓ Pass</span></td><td><button class="btn btn-sm btn-danger" onclick="deleteRow(event,this)">Delete</button></td></tr>
+              <tr class="row-selectable" onclick="selectRow(this)" data-id="2"><td>Bob</td><td>Playwright</td><td>JavaScript</td><td><span style="color:var(--red)">✗ Fail</span></td><td><button class="btn btn-sm btn-danger" onclick="deleteRow(event,this)">Delete</button></td></tr>
+              <tr class="row-selectable" onclick="selectRow(this)" data-id="3"><td>Carol</td><td>Cypress</td><td>TypeScript</td><td><span style="color:var(--green)">✓ Pass</span></td><td><button class="btn btn-sm btn-danger" onclick="deleteRow(event,this)">Delete</button></td></tr>
+              <tr class="row-selectable" onclick="selectRow(this)" data-id="4"><td>Dave</td><td>WebdriverIO</td><td>JavaScript</td><td><span style="color:var(--yellow)">⏸ Skip</span></td><td><button class="btn btn-sm btn-danger" onclick="deleteRow(event,this)">Delete</button></td></tr>
+              <tr class="row-selectable" onclick="selectRow(this)" data-id="5"><td>Eve</td><td>Selenium</td><td>Java</td><td><span style="color:var(--green)">✓ Pass</span></td><td><button class="btn btn-sm btn-danger" onclick="deleteRow(event,this)">Delete</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="output-box" id="tbl-output" style="margin-top:10px">// Click a row to select it</div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- MODALS -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="section" id="modals">
+      <div class="section-header">
+        <div class="section-icon" style="background:rgba(124,58,237,0.15)">⬚</div>
+        <div class="section-title">Modals &amp; Overlays</div>
+        <div class="section-id">#modals</div>
+      </div>
+      <div class="card">
+        <div class="btn-group">
+          <button class="btn btn-primary" id="btn-open-modal" onclick="openModal('modal-basic')">Open Modal</button>
+          <button class="btn btn-secondary" id="btn-open-modal-form" onclick="openModal('modal-form')">Form Modal</button>
+          <button class="btn btn-warning" id="btn-open-modal-confirm" onclick="openModal('modal-confirm')">Confirm Modal</button>
+        </div>
+      </div>
+    </div>
+    <!-- MODAL: BASIC -->
+    <div class="modal-overlay" id="modal-basic">
+      <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="modal-basic-title">
+        <button class="modal-close-btn" id="modal-basic-close" onclick="closeModal('modal-basic')" aria-label="Close">✕</button>
+        <div class="modal-title" id="modal-basic-title">Basic Modal</div>
+        <div class="modal-body">This is a modal dialog. In Selenium/Playwright, use <code>driver.switchTo().activeElement()</code> or <code>page.locator('[role=dialog]')</code> to interact with it.</div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary btn-sm" id="modal-basic-cancel" onclick="closeModal('modal-basic')">Cancel</button>
+          <button class="btn btn-primary btn-sm" id="modal-basic-ok" onclick="closeModal('modal-basic')">OK</button>
+        </div>
+      </div>
+    </div>
+    <!-- MODAL: FORM -->
+    <div class="modal-overlay" id="modal-form">
+      <div class="modal-box" role="dialog" aria-modal="true">
+        <button class="modal-close-btn" id="modal-form-close" onclick="closeModal('modal-form')">✕</button>
+        <div class="modal-title">Login Modal</div>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">
+          <div class="field"><label>Username <span class="selector-tag">#modal-username</span></label><input type="text" id="modal-username" placeholder="admin"/></div>
+          <div class="field"><label>Password <span class="selector-tag">#modal-pw</span></label><input type="password" id="modal-pw" placeholder="••••••"/></div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary btn-sm" id="modal-form-cancel" onclick="closeModal('modal-form')">Cancel</button>
+          <button class="btn btn-primary btn-sm" id="modal-form-login" onclick="modalLogin()">Login</button>
+        </div>
+      </div>
+    </div>
+    <!-- MODAL: CONFIRM -->
+    <div class="modal-overlay" id="modal-confirm">
+      <div class="modal-box" role="dialog" aria-modal="true">
+        <button class="modal-close-btn" id="modal-confirm-close" onclick="closeModal('modal-confirm')">✕</button>
+        <div class="modal-title">Confirm Action</div>
+        <div class="modal-body">Are you sure you want to delete this item? This action cannot be undone.</div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary btn-sm" id="modal-confirm-cancel" onclick="closeModal('modal-confirm');logToOutput('btn-output','❌ Cancelled')">No, Cancel</button>
+          <button class="btn btn-danger btn-sm" id="modal-confirm-delete" onclick="closeModal('modal-confirm');logToOutput('btn-output','✅ Confirmed deletion')">Yes, Delete</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- ALERTS & TOASTS -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="section" id="alerts">
+      <div class="section-header">
+        <div class="section-icon" style="background:rgba(251,191,36,0.1)">🔔</div>
+        <div class="section-title">Alerts &amp; Toasts</div>
+        <div class="section-id">#alerts</div>
+      </div>
+      <div class="card">
+        <div class="alert alert-info" id="alert-info" role="alert">ℹ️ Info alert — <code>#alert-info</code></div>
+        <div class="alert alert-success" id="alert-success" role="alert">✅ Success alert — <code>#alert-success</code></div>
+        <div class="alert alert-warning" id="alert-warning" role="alert">⚠️ Warning alert — <code>#alert-warning</code></div>
+        <div class="alert alert-danger" id="alert-danger" role="alert">❌ Danger alert — <code>#alert-danger</code></div>
+        <div class="btn-group" style="margin-top:12px">
+          <button class="btn btn-sm btn-success" id="toast-success-btn" onclick="showToast('✅ Action completed!','success')">Toast Success</button>
+          <button class="btn btn-sm btn-danger" id="toast-error-btn" onclick="showToast('❌ Error occurred!','error')">Toast Error</button>
+          <button class="btn btn-sm btn-warning" id="toast-warn-btn" onclick="showToast('⚠️ Warning message','warn')">Toast Warning</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- ACCORDION -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="section" id="accordion">
+      <div class="section-header">
+        <div class="section-icon" style="background:rgba(0,217,255,0.1)">☰</div>
+        <div class="section-title">Accordion / Collapsible</div>
+        <div class="section-id">#accordion</div>
+      </div>
+      <div class="card">
+        <div class="accordion-item" id="acc-1">
+          <div class="accordion-header" onclick="toggleAccordion('acc-1')" id="acc-1-header">
+            <span>What is Selenium? <span class="selector-tag">#acc-1</span></span><span class="accordion-arrow">▾</span>
+          </div>
+          <div class="accordion-body" id="acc-1-body">Selenium is an open-source framework for automating web browsers. It supports multiple languages including Python, Java, C#, and JavaScript. Use <code>find_element</code> or <code>page.locator</code> to interact with elements.</div>
+        </div>
+        <div class="accordion-item" id="acc-2">
+          <div class="accordion-header" onclick="toggleAccordion('acc-2')" id="acc-2-header">
+            <span>What is Playwright? <span class="selector-tag">#acc-2</span></span><span class="accordion-arrow">▾</span>
+          </div>
+          <div class="accordion-body" id="acc-2-body">Playwright is a modern automation framework by Microsoft. It supports Chrome, Firefox, and Safari and provides powerful selectors like <code>page.locator('text=...')</code>, <code>page.getByRole()</code>, <code>page.getByTestId()</code> etc.</div>
+        </div>
+        <div class="accordion-item open" id="acc-3">
+          <div class="accordion-header" onclick="toggleAccordion('acc-3')" id="acc-3-header">
+            <span>Which selectors to use? <span class="selector-tag">#acc-3</span></span><span class="accordion-arrow">▾</span>
+          </div>
+          <div class="accordion-body" id="acc-3-body">Prefer: ID &gt; data-testid &gt; aria-label &gt; CSS selector &gt; XPath. Avoid positional XPath. In Playwright use <code>getByRole</code> for best resilience.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- TABS -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="section" id="tabs">
+      <div class="section-header">
+        <div class="section-icon" style="background:rgba(34,211,163,0.1)">⊤</div>
+        <div class="section-title">Tabs</div>
+        <div class="section-id">#tabs</div>
+      </div>
+      <div class="card">
+        <div class="tabs-nav" id="tabs-nav" role="tablist">
+          <button class="tab-btn active" id="tab-btn-1" role="tab" aria-selected="true" onclick="switchTab(1)">Overview</button>
+          <button class="tab-btn" id="tab-btn-2" role="tab" aria-selected="false" onclick="switchTab(2)">Settings</button>
+          <button class="tab-btn" id="tab-btn-3" role="tab" aria-selected="false" onclick="switchTab(3)">Logs</button>
+          <button class="tab-btn" id="tab-btn-4" role="tab" aria-selected="false" onclick="switchTab(4)">About</button>
+        </div>
+        <div class="tab-panel active" id="tab-panel-1" role="tabpanel">
+          <strong style="color:var(--accent)">Overview Panel</strong> — This is the first tab content. Playwright: <code>page.getByRole('tab', {name:'Overview'}).click()</code>
+        </div>
+        <div class="tab-panel" id="tab-panel-2" role="tabpanel">
+          <strong style="color:var(--accent)">Settings Panel</strong> — Configure your test runner options here. The panel is only visible when this tab is active.
+        </div>
+        <div class="tab-panel" id="tab-panel-3" role="tabpanel">
+          <strong style="color:var(--accent)">Logs Panel</strong> — Test execution logs appear here. 2025-01-01 ✓ All tests passed.
+        </div>
+        <div class="tab-panel" id="tab-panel-4" role="tabpanel">
+          <strong style="color:var(--accent)">About Panel</strong> — QA Testing Playground v1.0. Built for Selenium &amp; Playwright learning.
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- SLIDERS -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="section" id="sliders">
+      <div class="section-header">
+        <div class="section-icon" style="background:rgba(251,191,36,0.1)">⇔</div>
+        <div class="section-title">Sliders &amp; Range Inputs</div>
+        <div class="section-id">#sliders</div>
+      </div>
+      <div class="card">
+        <div class="card-row">
+          <div class="field">
+            <label>Basic Slider <span class="selector-tag">#slider-basic</span> — Value: <span id="slider-val">50</span></label>
+            <input type="range" id="slider-basic" min="0" max="100" value="50" oninput="document.getElementById('slider-val').textContent=this.value"/>
+          </div>
+          <div class="field">
+            <label>Stepped (Step=10) <span class="selector-tag">#slider-step</span> — Value: <span id="slider-step-val">30</span></label>
+            <input type="range" id="slider-step" min="0" max="100" step="10" value="30" oninput="document.getElementById('slider-step-val').textContent=this.value"/>
+          </div>
+        </div>
+        <div class="card-row" style="margin-top:12px">
+          <div class="field">
+            <label>Disabled Slider <span class="selector-tag">#slider-disabled</span></label>
+            <input type="range" id="slider-disabled" min="0" max="100" value="60" disabled/>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- TOGGLES -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="section" id="toggles">
+      <div class="section-header">
+        <div class="section-icon" style="background:rgba(124,58,237,0.15)">⏻</div>
+        <div class="section-title">Toggles &amp; Switches</div>
+        <div class="section-id">#toggles</div>
+      </div>
+      <div class="card">
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <div class="inline-row">
+            <label class="toggle"><input type="checkbox" id="toggle-1" checked/><span class="toggle-track"><span class="toggle-thumb"></span></span></label>
+            <span style="font-size:0.78rem">Feature Flag A <span class="selector-tag">#toggle-1</span> (ON by default)</span>
+          </div>
+          <div class="inline-row">
+            <label class="toggle"><input type="checkbox" id="toggle-2"/><span class="toggle-track"><span class="toggle-thumb"></span></span></label>
+            <span style="font-size:0.78rem">Dark Mode <span class="selector-tag">#toggle-2</span></span>
+          </div>
+          <div class="inline-row">
+            <label class="toggle"><input type="checkbox" id="toggle-3" disabled/><span class="toggle-track"><span class="toggle-thumb"></span></span></label>
+            <span style="font-size:0.78rem;color:var(--muted)">Disabled Toggle <span class="selector-tag">#toggle-3</span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- FILE UPLOAD -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="section" id="file-upload">
+      <div class="section-header">
+        <div class="section-icon" style="background:rgba(0,217,255,0.1)">📎</div>
+        <div class="section-title">File Upload</div>
+        <div class="section-id">#file-upload</div>
+      </div>
+      <div class="card">
+        <div class="card-row">
+          <div class="field">
+            <label>Single File Upload <span class="selector-tag">#file-single</span></label>
+            <input type="file" id="file-single" onchange="logFile(this,'file-output')"/>
+          </div>
+          <div class="field">
+            <label>Multiple Files <span class="selector-tag">#file-multi</span></label>
+            <input type="file" id="file-multi" multiple onchange="logFile(this,'file-output')"/>
+          </div>
+          <div class="field">
+            <label>Accept Images Only <span class="selector-tag">#file-images</span></label>
+            <input type="file" id="file-images" accept="image/*" onchange="logFile(this,'file-output')"/>
+          </div>
+        </div>
+        <div class="drag-zone" id="dropzone" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleFileDrop(event)">
+          📂 Drag &amp; Drop files here — <span class="selector-tag">#dropzone</span>
+        </div>
+        <div class="output-box" id="file-output">// File info appears here</div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- DYNAMIC CONTENT -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="section" id="dynamic">
+      <div class="section-header">
+        <div class="section-icon" style="background:rgba(34,211,163,0.1)">⚡</div>
+        <div class="section-title">Dynamic Content &amp; Async</div>
+        <div class="section-id">#dynamic</div>
+      </div>
+      <div class="card">
+        <div class="btn-group">
+          <button class="btn btn-primary" id="btn-load-content" onclick="loadDynamic()">Load Content (2s delay)</button>
+          <button class="btn btn-secondary" id="btn-toggle-element" onclick="toggleHidden()">Toggle Hidden Element</button>
+          <button class="btn btn-warning" id="btn-appear" onclick="makeAppear()">Make Element Appear</button>
+          <button class="btn btn-success" id="btn-count-update" onclick="updateCounter()">Update Counter</button>
+        </div>
+        <div id="spinner-wrap" style="display:none;margin-top:16px;display:flex;align-items:center;gap:12px">
+          <div class="spinner" id="loading-spinner" style="display:none"></div>
+          <span id="loading-text" style="font-size:0.75rem;color:var(--muted)"></span>
+        </div>
+        <div id="dynamic-content" class="alert alert-success" style="margin-top:12px">
+          ✅ Dynamic content loaded! <span class="selector-tag">#dynamic-content</span>
+        </div>
+        <div id="hidden-element" class="hidden-el">
+          <div class="card" style="background:rgba(124,58,237,0.1);border-color:rgba(124,58,237,0.3)">
+            👁 I was hidden! Now you can see me. <span class="selector-tag">#hidden-element</span>
+          </div>
+        </div>
+        <div id="appear-element" style="display:none;margin-top:12px">
+          <div class="alert alert-info">🎉 This element appeared on demand! <span class="selector-tag">#appear-element</span></div>
+        </div>
+        <div class="output-box" id="counter-box" style="margin-top:12px">Counter: <span id="counter-val">0</span> — <span class="selector-tag">#counter-val</span></div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- DRAG & DROP -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="section" id="drag-drop">
+      <div class="section-header">
+        <div class="section-icon" style="background:rgba(251,191,36,0.1)">⇅</div>
+        <div class="section-title">Drag &amp; Drop (Sortable List)</div>
+        <div class="section-id">#drag-drop</div>
+      </div>
+      <div class="card">
+        <div style="font-size:0.7rem;color:var(--muted);margin-bottom:10px">Drag items to reorder — <span class="selector-tag">#sortable-list</span></div>
+        <div id="sortable-list">
+          <div class="drag-item" draggable="true" id="drag-item-1" ondragstart="dragStart(event)" ondragover="dragOver(event)" ondrop="drop(event)" data-pos="1"><span class="drag-handle">⠿</span> Item A</div>
+          <div class="drag-item" draggable="true" id="drag-item-2" ondragstart="dragStart(event)" ondragover="dragOver(event)" ondrop="drop(event)" data-pos="2"><span class="drag-handle">⠿</span> Item B</div>
+          <div class="drag-item" draggable="true" id="drag-item-3" ondragstart="dragStart(event)" ondragover="dragOver(event)" ondrop="drop(event)" data-pos="3"><span class="drag-handle">⠿</span> Item C</div>
+          <div class="drag-item" draggable="true" id="drag-item-4" ondragstart="dragStart(event)" ondragover="dragOver(event)" ondrop="drop(event)" data-pos="4"><span class="drag-handle">⠿</span> Item D</div>
+        </div>
+        <div class="output-box" id="drag-output" style="margin-top:10px">// Drop order logged here</div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- TOOLTIPS -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="section" id="tooltips">
+      <div class="section-header">
+        <div class="section-icon" style="background:rgba(0,217,255,0.1)">💬</div>
+        <div class="section-title">Tooltips &amp; Hover States</div>
+        <div class="section-id">#tooltips</div>
+      </div>
+      <div class="card">
+        <div class="btn-group" style="flex-wrap:wrap">
+          <div class="tooltip-wrap">
+            <button class="btn btn-secondary" id="tooltip-btn-1" title="This is a native title tooltip">Native Title Tooltip</button>
+            <span class="tooltip-text">Native title attribute tooltip</span>
+          </div>
+          <div class="tooltip-wrap">
+            <button class="btn btn-secondary" id="tooltip-btn-2">Custom CSS Tooltip</button>
+            <span class="tooltip-text">✨ Custom CSS hover tooltip! <span class="selector-tag">#tooltip-btn-2</span></span>
+          </div>
+          <div class="tooltip-wrap hover-trigger">
+            <button class="btn btn-secondary" id="tooltip-btn-3">Hover Reveal</button>
+            <span class="visible-on-hover tooltip-text">🙈 I was invisible!</span>
+          </div>
+        </div>
+        <div class="inline-row" style="margin-top:14px">
+          <div style="position:relative;display:inline-block">
+            <span id="badge-hover" style="background:var(--accent2);color:#fff;padding:4px 12px;border-radius:20px;font-size:0.7rem;cursor:pointer" data-tooltip="Badge tooltip!">Hover Badge</span>
+          </div>
+          <div id="hover-card" class="hover-trigger" style="background:var(--bg3);border:1px solid var(--border);padding:10px 14px;border-radius:6px;cursor:pointer;font-size:0.75rem">
+            Hover Card — inner content: <span class="visible-on-hover" style="color:var(--green)">👈 I appeared!</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- PROGRESS BARS -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="section" id="progress">
+      <div class="section-header">
+        <div class="section-icon" style="background:rgba(34,211,163,0.1)">▓</div>
+        <div class="section-title">Progress Bars</div>
+        <div class="section-id">#progress</div>
+      </div>
+      <div class="card">
+        <div class="field" style="margin-bottom:12px">
+          <label>Static Progress (75%) <span class="selector-tag">#progress-static</span></label>
+          <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progress-static" style="width:75%;background:var(--accent)" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100"></div></div>
+        </div>
+        <div class="field" style="margin-bottom:12px">
+          <label>Success (90%) <span class="selector-tag">#progress-success</span></label>
+          <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progress-success" style="width:90%;background:var(--green)"></div></div>
+        </div>
+        <div class="field" style="margin-bottom:12px">
+          <label>Warning (45%) <span class="selector-tag">#progress-warn</span></label>
+          <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progress-warn" style="width:45%;background:var(--yellow)"></div></div>
+        </div>
+        <div class="field" style="margin-bottom:12px">
+          <label>Danger (20%) <span class="selector-tag">#progress-danger</span></label>
+          <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progress-danger" style="width:20%;background:var(--red)"></div></div>
+        </div>
+        <div class="field">
+          <label>Animated — Current: <span id="progress-anim-val">0</span>% <span class="selector-tag">#progress-anim</span></label>
+          <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progress-anim" style="width:0%;background:linear-gradient(90deg,var(--accent),var(--accent2))"></div></div>
+          <button class="btn btn-sm btn-primary" id="btn-start-progress" onclick="animateProgress()" style="margin-top:8px">Start Animation</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- IFRAME -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="section" id="frames">
+      <div class="section-header">
+        <div class="section-icon" style="background:rgba(244,63,94,0.1)">⊡</div>
+        <div class="section-title">iFrame</div>
+        <div class="section-id">#frames</div>
+      </div>
+      <div class="card">
+        <div style="font-size:0.7rem;color:var(--muted);margin-bottom:10px">Embedded iframe — Selenium: <code>driver.switch_to.frame('iframe-demo')</code> | Playwright: <code>page.frameLocator('#iframe-demo')</code></div>
+        <iframe id="iframe-demo" name="iframe-demo" title="Demo iFrame" class="sandbox-frame" srcdoc="
+          <style>body{background:#0a0e17;color:#e2e8f0;font-family:monospace;padding:20px;margin:0}input{background:#1a2234;border:1px solid #1f2f4a;color:#e2e8f0;padding:8px;border-radius:4px;width:200px;font-family:monospace}button{background:#00d9ff;color:#000;border:none;padding:8px 16px;border-radius:4px;cursor:pointer;font-family:monospace;margin-left:8px}#result{margin-top:12px;color:#22d3a3}</style>
+          <p style='color:#00d9ff;font-size:0.85rem'>🖼 Inside the iframe!</p>
+          <input type='text' id='iframe-input' placeholder='Type inside iframe...' />
+          <button id='iframe-btn' onclick='document.getElementById(\"iframe-result\").textContent=\"Clicked: \"+document.getElementById(\"iframe-input\").value'>Submit</button>
+          <div id='iframe-result'></div>
+        "></iframe>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- KEYBOARD EVENTS -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="section" id="keyboard">
+      <div class="section-header">
+        <div class="section-icon" style="background:rgba(0,217,255,0.1)">⌨</div>
+        <div class="section-title">Keyboard Events</div>
+        <div class="section-id">#keyboard</div>
+      </div>
+      <div class="card">
+        <div class="field">
+          <label>Key Logger <span class="selector-tag">#key-input</span></label>
+          <input type="text" id="key-input" placeholder="Press any keys here..." onkeydown="logKey(event,'keydown')" onkeyup="logKey(event,'keyup')"/>
+        </div>
+        <div class="field" style="margin-top:12px">
+          <label>Keyboard Shortcuts <span class="selector-tag">#shortcut-area</span></label>
+          <div id="shortcut-area" tabindex="0" style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:16px;min-height:60px;outline:none;font-size:0.75rem;color:var(--muted)" onkeydown="handleShortcut(event)">
+            Click here then press: <kbd class="kbd">Ctrl+S</kbd> <kbd class="kbd">Ctrl+Z</kbd> <kbd class="kbd">Esc</kbd> <kbd class="kbd">Enter</kbd>
+          </div>
+        </div>
+        <div class="output-box" id="key-output">// Keyboard events logged here</div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- WAITS & LOADING -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="section" id="waits">
+      <div class="section-header">
+        <div class="section-icon" style="background:rgba(124,58,237,0.15)">⏱</div>
+        <div class="section-title">Waits &amp; Loading States</div>
+        <div class="section-id">#waits</div>
+      </div>
+      <div class="card">
+        <div class="btn-group">
+          <button class="btn btn-primary" id="btn-wait-1s" onclick="waitDemo(1000,'#wait-result-1','wait-result-1')">Wait 1s</button>
+          <button class="btn btn-secondary" id="btn-wait-3s" onclick="waitDemo(3000,'#wait-result-3','wait-result-3')">Wait 3s</button>
+          <button class="btn btn-warning" id="btn-wait-5s" onclick="waitDemo(5000,'#wait-result-5','wait-result-5')">Wait 5s</button>
+          <button class="btn btn-success" id="btn-fetch-data" onclick="fetchDataDemo()">Fetch Data</button>
+        </div>
+        <div style="margin-top:12px;display:flex;flex-direction:column;gap:8px">
+          <div class="output-box" id="wait-result-1">// 1s result appears here</div>
+          <div class="output-box" id="wait-result-3">// 3s result appears here</div>
+          <div class="output-box" id="wait-result-5">// 5s result appears here</div>
+        </div>
+        <div id="fetch-result" style="display:none;margin-top:10px" class="alert alert-success">✅ Fetch complete! Data: {"status":"ok","users":42}</div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- SHADOW DOM HINT -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="section" id="shadow">
+      <div class="section-header">
+        <div class="section-icon" style="background:rgba(251,191,36,0.1)">◈</div>
+        <div class="section-title">Shadow DOM</div>
+        <div class="section-id">#shadow</div>
+      </div>
+      <div class="card">
+        <div style="font-size:0.7rem;color:var(--muted);margin-bottom:12px">Custom Web Component with Shadow DOM — use <code>shadowRoot</code> to access internals.</div>
+        <div id="shadow-host"></div>
+        <div class="output-box" id="shadow-output">// Shadow DOM interactions logged here</div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- INFINITE SCROLL -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="section" id="infinite">
+      <div class="section-header">
+        <div class="section-icon" style="background:rgba(34,211,163,0.1)">∞</div>
+        <div class="section-title">Infinite Scroll / Pagination</div>
+        <div class="section-id">#infinite</div>
+      </div>
+      <div class="card">
+        <div style="font-size:0.7rem;color:var(--muted);margin-bottom:10px">Scroll the list to load more — <span class="selector-tag">#inf-list</span></div>
+        <div id="inf-list" onscroll="infiniteScroll()">
+          <!-- filled by JS -->
+        </div>
+        <div class="btn-group" style="margin-top:12px">
+          <button class="btn btn-sm btn-secondary" id="btn-prev-page" onclick="changePage(-1)" disabled>◀ Prev</button>
+          <span id="page-indicator" style="font-size:0.75rem;padding:6px 12px">Page 1 of 5</span>
+          <button class="btn btn-sm btn-secondary" id="btn-next-page" onclick="changePage(1)">Next ▶</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- NEW WINDOW / TAB -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="section" id="window">
+      <div class="section-header">
+        <div class="section-icon" style="background:rgba(244,63,94,0.1)">⧉</div>
+        <div class="section-title">New Window / Tab Handling</div>
+        <div class="section-id">#window</div>
+      </div>
+      <div class="card">
+        <div class="btn-group">
+          <a href="https://example.com" target="_blank" id="link-new-tab" class="btn btn-secondary">Open New Tab (example.com)</a>
+          <button class="btn btn-primary" id="btn-new-window" onclick="window.open('about:blank','newWin','width=600,height=400')">Open New Window</button>
+          <button class="btn btn-warning" id="btn-popup" onclick="openPopup()">Open Popup</button>
+        </div>
+        <div style="margin-top:14px;font-size:0.75rem;color:var(--muted)">
+          Selenium: <code>driver.switch_to.window(driver.window_handles[-1])</code><br/>
+          Playwright: <code>const [newPage] = await Promise.all([context.waitForEvent('page'), btn.click()])</code>
+        </div>
+      </div>
+    </div>
+
+    <!-- CHIPS / TAGS -->
+    <div class="section" id="chips">
+      <div class="section-header">
+        <div class="section-icon" style="background:rgba(0,217,255,0.1)">⬡</div>
+        <div class="section-title">Chips / Tags / Badges</div>
+        <div class="section-id">#chips</div>
+      </div>
+      <div class="card">
+        <span class="chip" id="chip-1" style="color:var(--accent);border-color:rgba(0,217,255,0.3)">Selenium <span class="chip-close" onclick="removeChip('chip-1')">✕</span></span>
+        <span class="chip" id="chip-2" style="color:var(--green);border-color:rgba(34,211,163,0.3)">Playwright <span class="chip-close" onclick="removeChip('chip-2')">✕</span></span>
+        <span class="chip" id="chip-3" style="color:var(--yellow);border-color:rgba(251,191,36,0.3)">Cypress <span class="chip-close" onclick="removeChip('chip-3')">✕</span></span>
+        <span class="chip" id="chip-4" style="color:var(--red);border-color:rgba(244,63,94,0.3)">WebdriverIO <span class="chip-close" onclick="removeChip('chip-4')">✕</span></span>
+        <div style="margin-top:12px;display:flex;gap:8px">
+          <input type="text" id="chip-input" placeholder="Add tag..." style="max-width:160px"/>
+          <button class="btn btn-sm btn-primary" id="btn-add-chip" onclick="addChip()">Add</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<!-- TOAST CONTAINER -->
+<div id="toast-container"></div>
+
+<script>
+// ── UTILS ──────────────────────────────────
+function logToOutput(id, msg) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = msg;
+}
+
+// ── SIDEBAR NAV HIGHLIGHT ──────────────────
+const navLinks = document.querySelectorAll('.nav-link');
+const sections = document.querySelectorAll('.section');
+window.addEventListener('scroll', () => {
+  let current = '';
+  sections.forEach(s => { if (window.scrollY >= s.offsetTop - 120) current = s.id; });
+  navLinks.forEach(l => {
+    l.classList.toggle('active', l.getAttribute('href') === '#' + current);
+  });
+});
+
+// ── TEXT INPUT LOGGING ─────────────────────
+document.querySelectorAll('#text-inputs input, #text-inputs textarea').forEach(el => {
+  el.addEventListener('input', () => {
+    logToOutput('input-output', `[${el.id}] value: "${el.value}"`);
+  });
+});
+
+// ── DROPDOWN ──────────────────────────────
+document.getElementById('sel-single').addEventListener('change', function() {
+  logToOutput('dd-output', `[sel-single] selected: "${this.value}"`);
+});
+document.getElementById('sel-multi').addEventListener('change', function() {
+  const vals = Array.from(this.selectedOptions).map(o=>o.value).join(', ');
+  logToOutput('dd-output', `[sel-multi] selected: [${vals}]`);
+});
+document.getElementById('sel-group').addEventListener('change', function() {
+  logToOutput('dd-output', `[sel-group] selected: "${this.value}"`);
+});
+
+function toggleCustomDD() {
+  const list = document.getElementById('custom-dd-list');
+  const btn = document.getElementById('custom-dd-btn');
+  const isOpen = list.style.display === 'block';
+  list.style.display = isOpen ? 'none' : 'block';
+  btn.setAttribute('aria-expanded', !isOpen);
+}
+function selectCustomDD(el) {
+  document.getElementById('custom-dd-value').textContent = el.textContent;
+  document.getElementById('custom-dd-list').style.display = 'none';
+  logToOutput('dd-output', `[custom-dropdown] selected: "${el.dataset.val}"`);
+}
+document.addEventListener('click', e => {
+  if (!document.getElementById('custom-dropdown').contains(e.target)) {
+    document.getElementById('custom-dd-list').style.display = 'none';
+  }
+});
+
+// ── CHECKBOXES ────────────────────────────
+const checkboxes = ['chk-1','chk-2','chk-3'];
+function checkAll() { checkboxes.forEach(id => { const el=document.getElementById(id); if(!el.disabled)el.checked=true; }); }
+function uncheckAll() { checkboxes.forEach(id => { const el=document.getElementById(id); if(!el.disabled)el.checked=false; }); }
+document.getElementById('chk-indeterminate').indeterminate = true;
+document.querySelectorAll('input[name="browser"]').forEach(el => {
+  el.addEventListener('change', () => logToOutput('radio-output', `Selected: ${el.value}`));
+});
+
+// ── BUTTONS ───────────────────────────────
+function logBtn(id) { logToOutput('btn-output', `✅ Clicked: ${id} at ${new Date().toLocaleTimeString()}`); }
+function asyncClick() {
+  const btn = document.getElementById('btn-async');
+  btn.disabled = true; btn.textContent = 'Loading...';
+  setTimeout(() => { btn.disabled=false; btn.textContent='Click → Wait → Result'; logToOutput('btn-output','✅ Async operation complete!'); }, 2000);
+}
+function confirmClick() { const r=confirm('Are you sure?'); logToOutput('btn-output', r?'✅ Confirmed':'❌ Cancelled'); }
+function promptClick() { const r=prompt('Enter your name:'); logToOutput('btn-output', r?`✅ Got: "${r}"`:'❌ Cancelled'); }
+function alertClick() { alert('This is an alert!'); logToOutput('btn-output','✅ Alert dismissed'); }
+function handleRightClick(e) { e.preventDefault(); logToOutput('btn-output','✅ Right-clicked! (contextmenu event)'); }
+document.getElementById('btn-double-click').addEventListener('dblclick', () => logToOutput('btn-output','✅ Double clicked!'));
+
+// ── FORM VALIDATION ───────────────────────
+function submitForm() {
+  const name = document.getElementById('form-name').value.trim();
+  const email = document.getElementById('form-email').value.trim();
+  const pass = document.getElementById('form-pass').value;
+  const pass2 = document.getElementById('form-pass2').value;
+  const agree = document.getElementById('form-agree').checked;
+  const errors = [];
+  if (!name) errors.push('Name required');
+  if (!email || !email.includes('@')) errors.push('Valid email required');
+  if (pass.length < 6) errors.push('Password min 6 chars');
+  if (pass !== pass2) errors.push('Passwords do not match');
+  if (!agree) errors.push('Must agree to terms');
+  if (errors.length) {
+    logToOutput('form-output', '❌ Errors: ' + errors.join(' | '));
+  } else {
+    logToOutput('form-output', `✅ Submitted! Name: ${name}, Email: ${email}`);
+  }
+}
+function resetForm() {
+  ['form-name','form-email','form-pass','form-pass2','form-msg'].forEach(id => document.getElementById(id).value='');
+  document.getElementById('form-role').selectedIndex=0;
+  document.getElementById('form-agree').checked=false;
+  logToOutput('form-output','🔄 Form reset');
+}
+
+// ── TABLE ─────────────────────────────────
+function selectRow(row) {
+  document.querySelectorAll('#tbl-body tr').forEach(r=>r.classList.remove('selected'));
+  row.classList.add('selected');
+  const cells = row.querySelectorAll('td');
+  logToOutput('tbl-output', `Selected row ID=${row.dataset.id}: ${cells[0].textContent} — ${cells[1].textContent} — ${cells[2].textContent}`);
+}
+function deleteRow(event, btn) {
+  event.stopPropagation();
+  const row = btn.closest('tr');
+  logToOutput('tbl-output', `Deleted row: ${row.querySelector('td').textContent}`);
+  row.remove();
+}
+function filterTable() {
+  const q = document.getElementById('tbl-search').value.toLowerCase();
+  document.querySelectorAll('#tbl-body tr').forEach(row => {
+    row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+}
+let sortDir = {};
+function sortTable(col) {
+  const tbody = document.getElementById('tbl-body');
+  const rows = Array.from(tbody.querySelectorAll('tr'));
+  sortDir[col] = !sortDir[col];
+  rows.sort((a,b) => {
+    const aT = a.querySelectorAll('td')[col].textContent;
+    const bT = b.querySelectorAll('td')[col].textContent;
+    return sortDir[col] ? aT.localeCompare(bT) : bT.localeCompare(aT);
+  });
+  rows.forEach(r => tbody.appendChild(r));
+}
+
+// ── MODALS ────────────────────────────────
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function modalLogin() {
+  const u = document.getElementById('modal-username').value;
+  const p = document.getElementById('modal-pw').value;
+  closeModal('modal-form');
+  logToOutput('btn-output', u==='admin'&&p==='admin' ? '✅ Login success!' : `❌ Invalid credentials (user:${u})`);
+}
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if(e.target===m) closeModal(m.id); });
+});
+
+// ── ACCORDION ─────────────────────────────
+function toggleAccordion(id) {
+  const item = document.getElementById(id);
+  item.classList.toggle('open');
+}
+
+// ── TABS ──────────────────────────────────
+function switchTab(n) {
+  for(let i=1;i<=4;i++){
+    document.getElementById(`tab-btn-${i}`).classList.toggle('active',i===n);
+    document.getElementById(`tab-btn-${i}`).setAttribute('aria-selected',i===n);
+    document.getElementById(`tab-panel-${i}`).classList.toggle('active',i===n);
+  }
+}
+
+// ── TOASTS ────────────────────────────────
+function showToast(msg, type='success') {
+  const t = document.createElement('div');
+  t.className = `toast${type==='error'?' toast-error':type==='warn'?' toast-warn':''}`;
+  t.textContent = msg;
+  document.getElementById('toast-container').appendChild(t);
+  setTimeout(() => t.remove(), 3500);
+}
+
+// ── DYNAMIC CONTENT ───────────────────────
+function loadDynamic() {
+  const spin = document.getElementById('loading-spinner');
+  const txt = document.getElementById('loading-text');
+  const content = document.getElementById('dynamic-content');
+  content.style.display = 'none';
+  spin.style.display = 'flex'; txt.textContent = 'Loading content...';
+  setTimeout(() => {
+    spin.style.display='none'; txt.textContent='';
+    content.style.display='flex';
+    showToast('Content loaded!');
+  }, 2000);
+}
+function toggleHidden() {
+  const el = document.getElementById('hidden-element');
+  el.classList.toggle('hidden-el');
+}
+function makeAppear() {
+  const el = document.getElementById('appear-element');
+  el.style.display = el.style.display==='none'?'block':'none';
+}
+let counter = 0;
+function updateCounter() {
+  counter++;
+  document.getElementById('counter-val').textContent = counter;
+}
+
+// ── FILE UPLOAD ───────────────────────────
+function logFile(input, outId) {
+  const files = Array.from(input.files).map(f=>`${f.name} (${(f.size/1024).toFixed(1)}KB)`).join(', ');
+  logToOutput(outId, `Files: ${files || 'none'}`);
+}
+function handleDragOver(e) { e.preventDefault(); document.getElementById('dropzone').classList.add('drag-over'); }
+function handleDragLeave() { document.getElementById('dropzone').classList.remove('drag-over'); }
+function handleFileDrop(e) {
+  e.preventDefault();
+  document.getElementById('dropzone').classList.remove('drag-over');
+  const files = Array.from(e.dataTransfer.files).map(f=>f.name).join(', ');
+  logToOutput('file-output', `Dropped: ${files}`);
+}
+
+// ── DRAG & DROP SORT ─────────────────────
+let dragSrc = null;
+function dragStart(e) { dragSrc = e.currentTarget; e.dataTransfer.effectAllowed='move'; }
+function dragOver(e) { e.preventDefault(); e.dataTransfer.dropEffect='move'; }
+function drop(e) {
+  e.preventDefault();
+  if (dragSrc && dragSrc !== e.currentTarget) {
+    const list = document.getElementById('sortable-list');
+    const items = Array.from(list.children);
+    const srcIdx = items.indexOf(dragSrc);
+    const tgtIdx = items.indexOf(e.currentTarget);
+    if (srcIdx < tgtIdx) list.insertBefore(dragSrc, e.currentTarget.nextSibling);
+    else list.insertBefore(dragSrc, e.currentTarget);
+    logToOutput('drag-output', 'Order: ' + Array.from(list.children).map(i=>i.textContent.trim()).join(' → '));
+  }
+}
+
+// ── PROGRESS ─────────────────────────────
+function animateProgress() {
+  let val = 0;
+  const bar = document.getElementById('progress-anim');
+  const lbl = document.getElementById('progress-anim-val');
+  const btn = document.getElementById('btn-start-progress');
+  btn.disabled = true;
+  const iv = setInterval(() => {
+    val += 2;
+    bar.style.width = val + '%';
+    lbl.textContent = val;
+    if (val >= 100) { clearInterval(iv); btn.disabled=false; showToast('Progress complete! 🎉'); }
+  }, 60);
+}
+
+// ── KEYBOARD ─────────────────────────────
+function logKey(e, type) {
+  logToOutput('key-output', `[${type}] key="${e.key}" code="${e.code}" ctrl=${e.ctrlKey} shift=${e.shiftKey} alt=${e.altKey}`);
+}
+function handleShortcut(e) {
+  const map = {
+    'ctrl+s': '💾 Save triggered',
+    'ctrl+z': '↩ Undo triggered',
+    'escape': '⎋ Escape pressed',
+    'enter': '⏎ Enter pressed',
+  };
+  const combo = (e.ctrlKey?'ctrl+':e.metaKey?'meta+':'') + e.key.toLowerCase();
+  const msg = map[combo] || map[e.key.toLowerCase()];
+  if (msg) { e.preventDefault(); logToOutput('key-output', msg); }
+}
+
+// ── WAITS ─────────────────────────────────
+function waitDemo(ms, selector, id) {
+  const el = document.getElementById(id);
+  el.textContent = `⏱ Waiting ${ms/1000}s...`;
+  setTimeout(() => { el.textContent = `✅ Done after ${ms/1000}s! — ${new Date().toLocaleTimeString()}`; }, ms);
+}
+function fetchDataDemo() {
+  const fr = document.getElementById('fetch-result');
+  fr.style.display='none';
+  setTimeout(() => { fr.style.display='flex'; showToast('Data fetched!'); }, 1500);
+}
+
+// ── SHADOW DOM ────────────────────────────
+const host = document.getElementById('shadow-host');
+const shadow = host.attachShadow({mode:'open'});
+shadow.innerHTML = `
+  <style>
+    .sw{background:#1a2234;border:1px solid #1f2f4a;border-radius:6px;padding:16px;font-family:monospace;font-size:0.78rem;color:#e2e8f0}
+    input{background:#0a0e17;border:1px solid #1f2f4a;color:#e2e8f0;padding:8px;border-radius:4px;font-family:monospace;width:200px}
+    button{background:#00d9ff;color:#000;border:none;padding:8px 16px;border-radius:4px;cursor:pointer;font-family:monospace;margin-left:8px}
+  </style>
+  <div class="sw">
+    <p style="color:#00d9ff;margin-bottom:8px">🔒 Inside Shadow DOM — selector: <code>host::shadowRoot</code></p>
+    <input type="text" id="shadow-input" placeholder="Type in Shadow DOM..."/>
+    <button id="shadow-btn">Click</button>
+  </div>
+`;
+shadow.getElementById('shadow-btn').addEventListener('click', () => {
+  const val = shadow.getElementById('shadow-input').value;
+  logToOutput('shadow-output', `Shadow DOM input value: "${val}"`);
+});
+
+// ── INFINITE SCROLL ───────────────────────
+let infPage = 0;
+function fillList(start) {
+  const list = document.getElementById('inf-list');
+  list.innerHTML = '';
+  for(let i=start;i<start+10;i++) {
+    const d = document.createElement('div');
+    d.className = 'inf-item';
+    d.id = `inf-item-${i}`;
+    d.textContent = `Test Case #${i+1} — login_flow_v${i+1}.spec.ts`;
+    list.appendChild(d);
+  }
+}
+fillList(0);
+function infiniteScroll() {
+  const list = document.getElementById('inf-list');
+  if (list.scrollTop + list.clientHeight >= list.scrollHeight - 5) {
+    infPage++;
+    const extra = document.createElement('div');
+    extra.className='inf-item';
+    extra.id=`inf-item-loaded-${infPage}`;
+    extra.style.color='var(--accent)';
+    extra.textContent=`↓ Loaded more — batch ${infPage}`;
+    list.appendChild(extra);
+  }
+}
+let currentPage = 1, totalPages = 5;
+function changePage(dir) {
+  currentPage = Math.max(1, Math.min(totalPages, currentPage+dir));
+  document.getElementById('page-indicator').textContent=`Page ${currentPage} of ${totalPages}`;
+  document.getElementById('btn-prev-page').disabled = currentPage===1;
+  document.getElementById('btn-next-page').disabled = currentPage===totalPages;
+  fillList((currentPage-1)*10);
+}
+
+// ── CHIPS ────────────────────────────────
+function removeChip(id) { const el=document.getElementById(id); if(el)el.remove(); }
+let chipCount = 5;
+function addChip() {
+  const val = document.getElementById('chip-input').value.trim();
+  if (!val) return;
+  const span = document.createElement('span');
+  span.className='chip'; span.id=`chip-${chipCount++}`;
+  span.style.cssText='color:var(--text);border-color:var(--border)';
+  span.innerHTML=`${val} <span class="chip-close" onclick="removeChip('${span.id}')">✕</span>`;
+  document.getElementById('chip-input').parentElement.parentElement.insertBefore(span, document.querySelector('.card.section-current'));
+  document.getElementById('chips').querySelector('.card').insertBefore(span, document.getElementById('chip-input').parentElement);
+  document.getElementById('chip-input').value='';
+}
+
+// ── POPUP ────────────────────────────────
+function openPopup() {
+  const popup = window.open('','popup','width=400,height=300,scrollbars=no');
+  popup.document.write(`<html><body style="background:#0a0e17;color:#e2e8f0;font-family:monospace;padding:24px"><h2 style="color:#00d9ff">Popup Window</h2><p>This is a popup. Switch to it using window handles.</p><button onclick="window.close()" style="background:#f43f5e;color:#fff;border:none;padding:8px 16px;border-radius:4px;cursor:pointer;margin-top:16px">Close</button></body></html>`);
+}
+
+// ── SPINNER DISPLAY FIX ───────────────────
+document.getElementById('loading-spinner').style.display = 'none';
+document.getElementById('loading-text').textContent = '';
+</script>
+</body>
+</html>
